@@ -13,13 +13,16 @@ import com.qxt.hgshop.pojo.SpecOption;
 import com.qxt.hgshop.service.SpecService;
 @Service(interfaceClass = SpecService.class)
 public class SpecServiceImpl implements SpecService {
+
 	@Autowired
 	SpecDao specDao;
 
+	
 	public PageInfo<Spec> list(String name, int page) {
 		// TODO Auto-generated method stub
 		PageHelper.startPage(page, 3);
 		return new PageInfo<Spec>(specDao.list(name));
+		
 	}
 
 	public int add(Spec spec) {
@@ -37,15 +40,30 @@ public class SpecServiceImpl implements SpecService {
 			specDao.addOption(specOption);
 			n++;
 		}
+		
 		// 返回的是影响数据的条数
 		return n;
 	}
-
+	
+	
 	public int update(Spec spec) {
 		// TODO Auto-generated method stub
-		return specDao.updateSpec(spec);
+		// 去子表中删除
+		specDao.deleteSpecOtions(spec.getId());
+		// 修改主表
+		specDao.updateSpec(spec);	 
+		// 插入子表
+		List<SpecOption> options = spec.getOptions();
+		for (SpecOption specOption : options) {
+			// 设置主表的id
+			specOption.setSpecId(spec.getId());
+			specDao.addOption(specOption);
+		}
+		
+		return 1;
+		 
 	}
-
+	
 	public int delete(int id) {
 		// TODO Auto-generated method stub
 		//删除子表
@@ -57,9 +75,11 @@ public class SpecServiceImpl implements SpecService {
 
 	public Spec findById(int id) {
 		// TODO Auto-generated method stub
+		
 		return specDao.get(id);
 	}
 
+	
 	public int deleteBatch(int[] ids) {
 		// TODO Auto-generated method stub
 		//删除子表
@@ -67,6 +87,11 @@ public class SpecServiceImpl implements SpecService {
 		//删除主表
 		specDao.deleteSpecBatch(ids);
 		return 1;
+	}
+
+	public List<Spec> listAll() {
+		// TODO Auto-generated method stub
+		return  specDao.listAll();
 	}
 
 }
